@@ -1,9 +1,8 @@
 ## StoryPlus
 HACK CMU PROJECT: AI Storytelling Platform
-An AI-powered storytelling app that generates infinitely long stories in real-time, creating a TikTok-style feed of narratives.
 
 Overview: 
-- RUN112 is a 2.5D tunnel runner game where players navigate through a procedurally generated tunnel, avoiding the holes and making sure the player stays on the platforms.
+An AI-powered storytelling app that generates infinitely long stories in real-time, creating a TikTok-style feed of narratives.
 
 Key Features: 
 - AI Story Generation:
