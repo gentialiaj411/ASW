@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildPrompt } from "@/lib/algo/storyEngine";
 import { cheapSummarize } from "@/lib/algo/summarizer";
-import { simHashSeen } from "@/lib/algo/dedup";
+import { MinHashLSHDeduper } from "@/lib/algo/minhash";
 
 const OLLAMA_HOST = process.env.OLLAMA_HOST || "http://localhost:11434";
 const MODEL_ID = process.env.MODEL_ID || "llama3.1:8b";
@@ -18,6 +18,8 @@ function sse(body: ReadableStream<Uint8Array>) {
   });
 }
 
+const dedupThreshold = parseFloat(process.env.DEDUP_THRESHOLD || "0.88");
+const deduper = new MinHashLSHDeduper({ threshold: dedupThreshold, maxEntries: 600 });
 const lastBodies: string[] = [];
 
 export async function GET(req: NextRequest) {
@@ -50,7 +52,8 @@ export async function GET(req: NextRequest) {
     continuation: cont,
   });
 
-  if (mode === "initial" && !force && simHashSeen(titleHint)) {
+  const dedupSignature = `${titleHint} ${system.slice(0, 512)} ${user.slice(0, 512)}`;
+  if (mode === "initial" && !force && deduper.isDuplicate(dedupSignature)) {
     const s = new ReadableStream({
       start(ctrl) {
         ctrl.enqueue(enc("[Similar to prior, skipping]\n"));
@@ -116,7 +119,14 @@ export async function GET(req: NextRequest) {
       if (r.done) {
         controller.enqueue(enc("[DONE]\n"));
         controller.close();
-        if (fullText) lastBodies.push(fullText);
+        if (fullText) {
+          lastBodies.push(fullText);
+          try {
+            deduper.remember(`${titleHint}:${Date.now()}`, fullText);
+          } catch (err) {
+            console.warn("Dedup remember failed:", err);
+          }
+        }
         if (lastBodies.length > 20) lastBodies.shift();
         return;
       }

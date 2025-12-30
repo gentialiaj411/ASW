@@ -1,4 +1,6 @@
-﻿const buckets = new Map<number,string[]>();
+﻿import { MinHashLSHDeduper } from "./minhash";
+
+const buckets = new Map<number,string[]>();
 function simhash64(s:string): bigint {
   const v = new Array(64).fill(0);
   for (const ch of s) {
@@ -15,3 +17,6 @@ export function simHashSeen(title:string): boolean {
   if (arr.some(t => t.toLowerCase() === title.toLowerCase())) return true;
   arr.push(title); buckets.set(band, arr); return false;
 }
+
+export const minHashDeduper = new MinHashLSHDeduper();
+export { MinHashLSHDeduper };

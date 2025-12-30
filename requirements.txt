@@ -1,3 +1,10 @@
 moviepy
 numpy
 Pillow
+torch
+transformers
+sentence-transformers
+datasketch
+scikit-learn
+tqdm
+requests
